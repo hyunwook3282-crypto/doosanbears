@@ -17,7 +17,6 @@ def get_today_doosan_ment():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     try:
-        # 무조건 한국 표준시(KST)를 기준으로 오늘 날짜 계산
         KST = timezone(timedelta(hours=9))
         today = datetime.now(KST)
         today_str = today.strftime("%m.%d")
@@ -85,18 +84,14 @@ def get_today_doosan_ment():
                         }
                         stadium = stadium_details.get(stadium, stadium)
                         
-                        return (f"\n----------------------------------------\n"
-                                f"🔜 [오늘의 경기 일정]\n"
-                                f"오늘은 {today.month}월 {today.day}일 {today_weekday}, "
-                                f"오늘의 경기는 {team1} VS {team2}의 경기입니다! "
+                        return (f"오늘은 {today.month}월 {today.day}일 {today_weekday}, "
+                                f"오늘의 경기는 {team1} VS {team2}의 경기입니다!\n"
                                 f"경기는 {stadium} 구장에서 {match_time}에 열리며, 오늘도 두산베어스의 승리를 응원합니다! 🐻⚾\n"
                                 f"========================================")
                 except:
                     continue
                     
-        return (f"\n----------------------------------------\n"
-                f"🔜 [오늘의 경기 일정]\n"
-                f"오늘은 {today.month}월 {today.day}일 {today_weekday}입니다. "
+        return (f"오늘은 {today.month}월 {today.day}일 {today_weekday}입니다. "
                 f"오늘은 두산 베어스의 경기 일정이 없습니다. 재충전의 하루 보내세요! 🐻\n"
                 f"========================================")
         
