@@ -53,7 +53,6 @@ def generate_final_newsletter():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     try:
-        # 무조건 한국 표준시(KST)를 기준으로 어제 날짜 계산
         KST = timezone(timedelta(hours=9))
         now_kst = datetime.now(KST)
         yesterday = now_kst - timedelta(days=1)
@@ -94,7 +93,7 @@ def generate_final_newsletter():
                 except: continue
                     
         if not target_row:
-            return f"========================================\n🐻 [미라클 두산 데일리 리포트]\n========================================\n\n📰 어제({yesterday.month}월 {yesterday.day}일 {yesterday_weekday})는 두산 베어스의 경기 일정이 없었거나 우천 취소되었습니다. 🐻\n"
+            return f"📰 [어제의 두산 베어스 경기 리뷰]\n어제({yesterday.month}월 {yesterday.day}일 {yesterday_weekday})는 두산 베어스의 경기 일정이 없었거나 우천 취소되었습니다. 🐻\n"
 
         play_text = target_row.find_element(By.CLASS_NAME, "play").text
         team_mapping = {
@@ -144,11 +143,8 @@ def generate_final_newsletter():
         editor_comment = "장단 18안타 맹폭격! 끝까지 포기하지 않는 '미라클 두산'의 뚝심이 가을야구 청신호를 완벽하게 켰습니다 🚦⚾"
 
         report = (
-            f"========================================\n"
-            f"🐻 [미라클 두산 데일리 리포트]\n"
-            f"========================================\n"
-            f"📅 [어제의 두산 베어스 경기 리뷰]\n"
-            f"날짜: {yesterday.month}월 {yesterday.day}일 {yesterday_weekday}\n"
+            f"📰 [어제의 두산 베어스 경기 리뷰]\n"
+            f"📅 날짜: {yesterday.month}월 {yesterday.day}일 {yesterday_weekday}\n"
             f"⚾ 매치업: {team1} VS {team2}\n"
             f"📊 경기 결과: {team1} {score} {team2}\n"
             f"🎯 승/패 투수: {pitcher_info}\n\n"
