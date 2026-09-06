@@ -4,7 +4,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 import re
 
 def get_today_doosan_ment():
@@ -17,6 +17,13 @@ def get_today_doosan_ment():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     
     try:
+        # 무조건 한국 표준시(KST)를 기준으로 오늘 날짜 계산
+        KST = timezone(timedelta(hours=9))
+        today = datetime.now(KST)
+        today_str = today.strftime("%m.%d")
+        weekdays = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
+        today_weekday = weekdays[today.weekday()]
+        
         driver.get("https://www.koreabaseball.com/Schedule/Schedule.aspx")
         wait = WebDriverWait(driver, 10)
         
@@ -29,11 +36,6 @@ def get_today_doosan_ment():
         
         table = driver.find_element(By.CSS_SELECTOR, "#tblScheduleList")
         rows = table.find_elements(By.TAG_NAME, "tr")
-        
-        today = datetime.now()
-        today_str = today.strftime("%m.%d")
-        weekdays = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
-        today_weekday = weekdays[today.weekday()]
         
         current_date = ""
         team_mapping = {
@@ -83,14 +85,20 @@ def get_today_doosan_ment():
                         }
                         stadium = stadium_details.get(stadium, stadium)
                         
-                        return (f"오늘은 {today.month}월 {today.day}일 {today_weekday}, "
+                        return (f"\n----------------------------------------\n"
+                                f"🔜 [오늘의 경기 일정]\n"
+                                f"오늘은 {today.month}월 {today.day}일 {today_weekday}, "
                                 f"오늘의 경기는 {team1} VS {team2}의 경기입니다! "
-                                f"경기는 {stadium} 구장에서 {match_time}에 열리며, 오늘도 두산베어스의 승리를 응원합니다! 🐻⚾")
+                                f"경기는 {stadium} 구장에서 {match_time}에 열리며, 오늘도 두산베어스의 승리를 응원합니다! 🐻⚾\n"
+                                f"========================================")
                 except:
                     continue
                     
-        return (f"오늘은 {today.month}월 {today.day}일 {today_weekday}입니다. "
-                f"오늘은 두산 베어스의 경기 일정이 없습니다. 재충전의 하루 보내세요! 🐻")
+        return (f"\n----------------------------------------\n"
+                f"🔜 [오늘의 경기 일정]\n"
+                f"오늘은 {today.month}월 {today.day}일 {today_weekday}입니다. "
+                f"오늘은 두산 베어스의 경기 일정이 없습니다. 재충전의 하루 보내세요! 🐻\n"
+                f"========================================")
         
     except Exception as e:
         return f"오류 발생: {e}"
