@@ -6,13 +6,13 @@ def create_and_send_newsletter():
     print("⏳ 데이터를 수집 중입니다...")
 
     try:
-        yesterday_result = subprocess.run(["python3", "어제경기리뷰.py"], capture_output=True, text=True, check=True)
+        yesterday_result = subprocess.run(["python3", "review.py"], capture_output=True, text=True, check=True)
         yesterday_text = yesterday_result.stdout.strip()
     except Exception as e:
         yesterday_text = f"어제 경기 리뷰를 불러오지 못했습니다: {e}"
 
     try:
-        schedule_result = subprocess.run(["python3", "경기일정.py"], capture_output=True, text=True, check=True)
+        schedule_result = subprocess.run(["python3", "schedule.py"], capture_output=True, text=True, check=True)
         schedule_text = schedule_result.stdout.strip()
     except Exception as e:
         schedule_text = f"경기 일정을 불러오지 못했습니다: {e}"
