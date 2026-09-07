@@ -7,9 +7,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
+from google import genai
 import requests
 import re
 import time
+import os
 
 def get_news_commentary(month, day, opponent_team):
     search_keyword = f"{month}월 {day}일 두산베어스 {opponent_team}"
@@ -43,6 +45,59 @@ def get_news_commentary(month, day, opponent_team):
     except Exception as e:
         return f"뉴스 리뷰를 불러오는 중 오류 발생: {e}"
 
+# 🔥 프롬프트가 고도화된 Gemini AI 생성 함수
+def get_gemini_insights(team1, team2, score, news_reviews):
+    api_key = os.environ.get("GEMINI_API_KEY")
+    
+    if not api_key:
+        return "🔥 [어제의 승부처 & 에디터 코멘트]\n(API 키가 연동되지 않아 코멘트를 생성할 수 없습니다.)"
+        
+    try:
+        client = genai.Client(api_key=api_key)
+        
+        prompt = f"""
+        당신은 두산 베어스의 열혈 팬이자 도파민을 자극하는 뉴스레터 에디터입니다.
+        어제 야구 경기 결과와 언론 기사 요약을 바탕으로, 다음 두 가지 항목을 재치 있게 작성해 주세요.
+        
+        [경기 결과]
+        매치업: {team1} vs {team2}
+        스코어: {score}
+        
+        [언론 기사 요약]
+        {news_reviews}
+        
+        [출력 양식] (반드시 아래 양식과 텍스트 형태를 그대로 유지해서 출력할 것)
+        
+        🔥 [어제의 승부처 3줄 요약]
+        • (기사 내용을 바탕으로 경기의 결정적 승부처나 요인을 팩트 기반으로 1줄 요약)
+        • (승패를 가른 핵심 선수의 활약이나 아쉬운 점 1줄 요약)
+        • (에디터의 극강의 텐션 또는 뚝심 있는 위로가 담긴 찐팬 코멘트 1줄 🐻)
+        
+        💬 [밤사이 커뮤니티 핫토픽 & 밈]
+        • 📸 화제의 짤: (경기 결과에 어울리는 가상의 유쾌한 팬덤 밈이나 화제가 되었을 법한 표정/행동 묘사)
+        • 🗣️ 팬들 반응: (경기 결과에 열광하거나 자조하는 찐팬들의 생생한 커뮤니티 말투 반응 2개 기재. 예: "혈막히던 타선 뻥 뚫렸다 ㅋㅋㅋ")
+        """
+        
+        # 🔥 503 에러 방어를 위한 자동 재시도(Retry) 로직 도입
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = client.models.generate_content(
+                    model='gemini-3.6-flash',
+                    contents=prompt,
+                )
+                return response.text.strip()
+            except Exception as e:
+                if "503" in str(e) and attempt < max_retries - 1:
+                    print(f"⚠️ 서버 혼잡(503) 감지. 5초 후 재시도합니다... ({attempt+1}/{max_retries})")
+                    time.sleep(5) # 5초 대기 후 다시 시도
+                    continue
+                else:
+                    return f"🔥 [어제의 승부처 & 에디터 코멘트]\n(코멘트 생성 실패: {e})"
+                    
+    except Exception as e:
+        return f"🔥 [어제의 승부처 & 에디터 코멘트]\n(시스템 오류: {e})"
+    
 def generate_final_newsletter():
     options = webdriver.ChromeOptions()
     options.add_argument('--headless')
@@ -139,9 +194,13 @@ def generate_final_newsletter():
             except Exception:
                 pitcher_info = "투수 정보 크롤링 실패"
 
+        # 네이버 뉴스 기사 요약본 추출
         news_reviews = get_news_commentary(yesterday.month, yesterday.day, opponent)
-        editor_comment = "장단 18안타 맹폭격! 끝까지 포기하지 않는 '미라클 두산'의 뚝심이 가을야구 청신호를 완벽하게 켰습니다 🚦⚾"
+        
+        # 🔥 Gemini API를 호출하여 승부처 및 커뮤니티 밈 인사이트 생성
+        ai_insights = get_gemini_insights(team1, team2, score, news_reviews)
 
+        # 기존의 딱딱했던 미디어 코멘트 영역을 빼고, AI가 작성한 도파민 텍스트를 바로 꽂아 넣음
         report = (
             f"📰 [어제의 두산 베어스 경기 리뷰]\n"
             f"📅 날짜: {yesterday.month}월 {yesterday.day}일 {yesterday_weekday}\n"
@@ -149,11 +208,8 @@ def generate_final_newsletter():
             f"📊 경기 결과: {team1} {score} {team2}\n"
             f"🎯 승/패 투수: {pitcher_info}\n\n"
             f"----------------------------------------\n"
-            f"🎙️ [전문가 & 미디어 코멘트]\n"
-            f"{news_reviews}\n"
-            f"----------------------------------------\n"
-            f"🔥 [에디터의 찐텐션 한 줄 평]\n"
-            f"\"{editor_comment}\"\n\n"
+            f"{ai_insights}\n"
+            f"----------------------------------------\n\n"
             f"👉 상세 매치 리뷰 보기: {game_link}"
         )
         return report
