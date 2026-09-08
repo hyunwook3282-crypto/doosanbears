@@ -83,7 +83,7 @@ def get_gemini_insights(team1, team2, score, news_reviews):
         for attempt in range(max_retries):
             try:
                 response = client.models.generate_content(
-                    model='gemini-3.6-flash',
+                    model='gemini-1.5-flash', # 오류가 날 수 있는 구버전/오타 모델명을 안전한 버전으로 수정
                     contents=prompt,
                 )
                 return response.text.strip()
@@ -147,8 +147,9 @@ def generate_final_newsletter():
                         break
                 except: continue
                     
+        # 🔥 경기가 없는 날 출력되는 재치 있는 문구 적용 (요청사항)
         if not target_row:
-            return f"📰 [어제의 두산 베어스 경기 리뷰]\n어제({yesterday.month}월 {yesterday.day}일 {yesterday_weekday})는 두산 베어스의 경기 일정이 없었거나 우천 취소되었습니다. 🐻\n"
+            return f"📰 [어제의 두산 베어스 경기 리뷰]\n어제({yesterday.month}월 {yesterday.day}일 {yesterday_weekday})는 휴식의 날입니다! 달콤한 휴식으로 에너지를 100% 충전한 미라클 두산, 다음 경기를 기대해 주세요 🐻💤\n"
 
         play_text = target_row.find_element(By.CLASS_NAME, "play").text
         team_mapping = {
@@ -217,7 +218,8 @@ def generate_final_newsletter():
     except Exception as e:
         return f"데이터 크롤링 중 오류가 발생했습니다: {e}"
     finally:
-        driver.quit()
+        if 'driver' in locals():
+            driver.quit()
 
 if __name__ == "__main__":
     print(generate_final_newsletter())
