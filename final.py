@@ -9,13 +9,17 @@ def create_and_send_newsletter():
     try:
         yesterday_result = subprocess.run(["python3", "review.py"], capture_output=True, text=True, check=True)
         yesterday_text = yesterday_result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        yesterday_text = f"어제 경기 리뷰 크래시 에러:\n{e.stderr.strip() if e.stderr else e}"
     except Exception as e:
         yesterday_text = f"어제 경기 리뷰를 불러오지 못했습니다: {e}"
 
-    # 2. 오늘 엔트리 변동 현황 수집 (추가된 부분)
+    # 2. 오늘 엔트리 변동 현황 수집
     try:
         entry_result = subprocess.run(["python3", "entry.py"], capture_output=True, text=True, check=True)
         entry_text = entry_result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        entry_text = f"엔트리 정보 크래시 에러:\n{e.stderr.strip() if e.stderr else e}"
     except Exception as e:
         entry_text = f"엔트리 정보를 불러오지 못했습니다: {e}"
 
@@ -23,10 +27,12 @@ def create_and_send_newsletter():
     try:
         schedule_result = subprocess.run(["python3", "schedule.py"], capture_output=True, text=True, check=True)
         schedule_text = schedule_result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        schedule_text = f"경기 일정 크래시 에러:\n{e.stderr.strip() if e.stderr else e}"
     except Exception as e:
         schedule_text = f"경기 일정을 불러오지 못했습니다: {e}"
 
-    # 통합 데일리 리포트 포맷팅 (엔트리 현황 텍스트 추가)
+    # 통합 데일리 리포트 포맷팅
     final_newsletter = (
         f"========================================\n"
         f"🐻 [미라클 두산 통합 데일리 리포트]\n"
@@ -40,7 +46,6 @@ def create_and_send_newsletter():
         f"========================================"
     )
     
-    # 깃허브에 숨겨둔 디스코드 웹훅 URL을 불러옴
     webhook_url = os.environ.get("DISCORD_WEBHOOK")
     
     if webhook_url:
