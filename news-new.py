@@ -5,21 +5,17 @@ import requests
 from google import genai
 
 # =========================================================
-# [설정] 환경변수가 등록되어 있으면 환경변수를 쓰고, 
-# 없다면 따옴표 안에 발급받은 키를 직접 적어서 테스트할 수 있습니다.
+# 🔥 깃허브 환경 변수(Secrets)를 불러오는 코드로 변경
 # =========================================================
-NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID") or "본인의_NAVER_CLIENT_ID"
-NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET") or "본인의_NAVER_CLIENT_SECRET"
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or "본인의_GEMINI_API_KEY"
+NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID", "")
+NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET", "")
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 
-# ---------------------------------------------------------
-# 1. 네이버 뉴스 검색 API 호출 함수 (최신순 10개 수집)
-# ---------------------------------------------------------
 def fetch_naver_news_api(keyword="두산베어스", display_count=10):
-    client_id = NAVER_CLIENT_ID.strip() if NAVER_CLIENT_ID else None
-    client_secret = NAVER_CLIENT_SECRET.strip() if NAVER_CLIENT_SECRET else None
+    client_id = NAVER_CLIENT_ID.strip()
+    client_secret = NAVER_CLIENT_SECRET.strip()
     
-    if not client_id or not client_secret or "본인의_" in client_id:
+    if not client_id or not client_secret:
         return "⚠️ 네이버 Client ID 및 Client Secret이 올바르게 설정되지 않았습니다."
     
     url = "https://openapi.naver.com/v1/search/news.json"
