@@ -30,6 +30,12 @@ jobs:
       # 4. 파이썬 스크립트 실행 및 디스코드 전송
       - name: Run final.py
         env:
+          # 파이썬 스크립트 실행 단계 예시
+      - name: Run final.py
+        env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}         # 👈 추가
+          NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }} # 👈 추가
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}           # 👈 추가 (Gemini 404 에러도 이걸로 같이 해결됩니다)
+        run: python3 final.py
         run: python3 final.py
