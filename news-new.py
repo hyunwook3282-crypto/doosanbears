@@ -107,7 +107,7 @@ def generate_news_summary(raw_news_data):
         
         # 모델명 수정 (gemini-3.6-flash -> gemini-1.5-flash)
         response = client.models.generate_content(
-            model='gemini-1.5-flash',
+            model='gemini-2.0-flash',
             contents=prompt,
         )
         return response.text.strip()
