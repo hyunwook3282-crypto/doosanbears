@@ -18,11 +18,10 @@ def fetch_naver_news_api(keyword="두산베어스", display_count=10):
     if not client_id or not client_secret:
         return "⚠️ 네이버 Client ID 및 Client Secret이 올바르게 설정되지 않았습니다."
     
-    # 🚨 [수정 1] Naver API Hub (NCloud) 뉴스 검색 URL로 변경
-    # NCloud의 검색 API 기본 엔드포인트입니다.
-    url = "https://naveropenapi.apigw.ntruss.com/search-api/v1/search/news"
+    # 🚨 [수정됨] API Hub 기본 주소 + 찾으신 뉴스 검색 경로 결합
+    url = "https://naverapihub.apigw.ntruss.com/search/v1/news"
     
-    # 🚨 [수정 2] NCloud 전용 헤더 이름으로 변경 (가장 중요한 부분)
+    # NCloud API Hub 전용 헤더
     headers = {
         "X-NCP-APIGW-API-KEY-ID": client_id,
         "X-NCP-APIGW-API-KEY": client_secret
@@ -37,17 +36,11 @@ def fetch_naver_news_api(keyword="두산베어스", display_count=10):
     try:
         response = requests.get(url, headers=headers, params=params, timeout=10)
         
+        # 만약 이 URL에서 401 에러가 다시 발생한다면 헤더 이름을 구형으로 바꿔야 할 수 있습니다.
         if response.status_code == 401:
             return (
                 f"❌ Naver API Hub 호출 실패 (401 인증 오류):\n"
-                f"Client ID와 Secret 값이 정확한지, 혹은 API Hub에 '검색' 권한이 등록되었는지 확인하세요.\n"
-                f"응답 본문: {response.text}"
-            )
-        # 404 에러 시 URL 경로 확인 안내
-        elif response.status_code == 404:
-            return (
-                f"❌ Naver API Hub 호출 실패 (404 찾을 수 없음):\n"
-                f"API 호출 URL이 잘못되었습니다. 가이드 문서에 명시된 정확한 요청 URL(Endpoint)을 확인하여 코드의 url 변수를 수정해 주세요.\n"
+                f"URL은 찾았으나 인증에 실패했습니다. 헤더 이름을 기존(X-Naver-Client-Id)으로 변경해야 할 수 있습니다.\n"
                 f"응답 본문: {response.text}"
             )
         elif response.status_code != 200:
@@ -75,6 +68,7 @@ def fetch_naver_news_api(keyword="두산베어스", display_count=10):
         return f"네이버 뉴스 데이터 수집 중 네트워크 오류 발생: {e}"
     except Exception as e:
         return f"알 수 없는 오류 발생: {e}"
+
 # ---------------------------------------------------------
 # 2. Gemini AI 미디어 총평 및 에디터 코멘트 생성 함수
 # ---------------------------------------------------------
