@@ -18,30 +18,40 @@ def fetch_naver_news_api(keyword="두산베어스", display_count=10):
     if not client_id or not client_secret:
         return "⚠️ 네이버 Client ID 및 Client Secret이 올바르게 설정되지 않았습니다."
     
-    url = "https://openapi.naver.com/v1/search/news.json"
+    # 🚨 [수정 1] Naver API Hub (NCloud) 뉴스 검색 URL로 변경
+    # NCloud의 검색 API 기본 엔드포인트입니다.
+    url = "https://naveropenapi.apigw.ntruss.com/search-api/v1/search/news"
+    
+    # 🚨 [수정 2] NCloud 전용 헤더 이름으로 변경 (가장 중요한 부분)
     headers = {
-        "X-Naver-Client-Id": client_id,
-        "X-Naver-Client-Secret": client_secret
+        "X-NCP-APIGW-API-KEY-ID": client_id,
+        "X-NCP-APIGW-API-KEY": client_secret
     }
+    
     params = {
         "query": keyword,
-        "display": display_count,  # 최신 기사 10개 제한
-        "sort": "date"             # 최신순 정렬
+        "display": display_count,
+        "sort": "date"
     }
     
     try:
-        # timeout을 설정하여 무한 대기 방지
         response = requests.get(url, headers=headers, params=params, timeout=10)
         
         if response.status_code == 401:
             return (
-                f"❌ 네이버 API 호출 실패 (401 인증 오류):\n"
-                f"1. 네이버 개발자 센터 [내 애플리케이션] -> [API 설정]에서 '검색' API가 추가되어 있는지 확인하세요.\n"
-                f"2. Client ID와 Secret 값이 정확히 입력되었는지 확인하세요.\n"
+                f"❌ Naver API Hub 호출 실패 (401 인증 오류):\n"
+                f"Client ID와 Secret 값이 정확한지, 혹은 API Hub에 '검색' 권한이 등록되었는지 확인하세요.\n"
+                f"응답 본문: {response.text}"
+            )
+        # 404 에러 시 URL 경로 확인 안내
+        elif response.status_code == 404:
+            return (
+                f"❌ Naver API Hub 호출 실패 (404 찾을 수 없음):\n"
+                f"API 호출 URL이 잘못되었습니다. 가이드 문서에 명시된 정확한 요청 URL(Endpoint)을 확인하여 코드의 url 변수를 수정해 주세요.\n"
                 f"응답 본문: {response.text}"
             )
         elif response.status_code != 200:
-            return f"❌ 네이버 API 호출 실패 ({response.status_code}): {response.text}"
+            return f"❌ API 호출 실패 ({response.status_code}): {response.text}"
             
         data = response.json()
         items = data.get("items", [])
@@ -51,7 +61,6 @@ def fetch_naver_news_api(keyword="두산베어스", display_count=10):
             
         raw_news_data = ""
         for i, item in enumerate(items[:display_count]):
-            # HTML 태그 제거 및 불필요한 공백/줄바꿈 정리
             clean_title = re.sub(r'<[^>]+>', '', html.unescape(item.get("title", "")))
             clean_title = " ".join(clean_title.split())
             
@@ -66,7 +75,6 @@ def fetch_naver_news_api(keyword="두산베어스", display_count=10):
         return f"네이버 뉴스 데이터 수집 중 네트워크 오류 발생: {e}"
     except Exception as e:
         return f"알 수 없는 오류 발생: {e}"
-
 # ---------------------------------------------------------
 # 2. Gemini AI 미디어 총평 및 에디터 코멘트 생성 함수
 # ---------------------------------------------------------
